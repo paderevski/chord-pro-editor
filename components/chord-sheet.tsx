@@ -1,5 +1,7 @@
 "use client";
 
+import { ParsedLine, ChordLyricPairProps } from './types';
+import PrintPreview from './print-preview';
 import React, { useState, useEffect } from 'react';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
@@ -92,6 +94,79 @@ const getNoteNameFromValue = (value: NoteValue, preferFlats = false): string => 
   return preferFlats ? FLAT_NOTE_NAMES[value] : NOTE_NAMES[value];
 };
 
+const parseLine = (line: string): ParsedLine => {
+  if (line.startsWith('{') && line.endsWith('}')) {
+    const content = line.slice(1, -1);
+    const contentLower = content.toLowerCase();
+
+    if (contentLower === 'start_of_verse' || contentLower === 'sov') {
+      return { type: 'section_start', section: 'verse' };
+    }
+    if (contentLower === 'start_of_chorus' || contentLower === 'soc') {
+      return { type: 'section_start', section: 'chorus' };
+    }
+    if (contentLower === 'end_of_verse' || contentLower === 'eov' ||
+        contentLower === 'end_of_chorus' || contentLower === 'eoc') {
+      return { type: 'section_end' };
+    }
+
+    const colonIndex = content.indexOf(':');
+    if (colonIndex !== -1) {
+      return {
+        type: 'metadata',
+        key: content.substring(0, colonIndex).trim().toLowerCase(),
+        value: content.substring(colonIndex + 1).trim()
+      };
+    }
+
+    return { type: 'metadata', key: content, value: '' };
+  }
+
+  const pairs: ChordLyricPairProps[] = [];
+  let buffer = '';
+  let currentChord = '';
+  let inChord = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '|') {
+      if (buffer || currentChord) {
+        pairs.push({ chord: currentChord, lyrics: buffer });
+        currentChord = '';
+        buffer = '';
+      }
+      pairs.push({ isBarline: true });
+      continue;
+    }
+
+    if (char === '[') {
+      if (buffer && !currentChord) {
+        pairs.push({ chord: '', lyrics: buffer });
+        buffer = '';
+      }
+      else if (buffer && currentChord) {
+        pairs.push({ chord: currentChord, lyrics: buffer });
+        buffer = '';
+      }
+      currentChord = '';
+      inChord = true;
+    } else if (char === ']') {
+      inChord = false;
+    } else if (inChord) {
+      currentChord += char;
+    } else {
+      buffer += char;
+    }
+  }
+
+  if (buffer || currentChord) {
+    pairs.push({ chord: currentChord, lyrics: buffer });
+  }
+
+  return { type: 'line', pairs };
+};
+
 // Components
 const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: boolean }> = ({ chord, lyrics, isBarline }) => {
   if (isBarline) {
@@ -117,12 +192,6 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
   );
 };
 
-const PrintPreview: React.FC<{ content: string }> = ({ content }) => (
-  <div className="bg-white w-[8.5in] min-h-[11in] mx-auto p-[0.5in] shadow-lg">
-    <div className="font-mono">{content}</div>
-  </div>
-);
-
 // Main component
 const ChordSheet = () => {
   const [input, setInput] = useState(`{title: I Feel Lucky}
@@ -141,80 +210,6 @@ const ChordSheet = () => {
   useEffect(() => {
     setOriginalInput(input);
   }, []);
-
-  // Basic parsing of ChordPro format
-  const parseLine = (line: string) => {
-    if (line.startsWith('{') && line.endsWith('}')) {
-      const content = line.slice(1, -1);
-      const contentLower = content.toLowerCase();
-
-      if (contentLower === 'start_of_verse' || contentLower === 'sov') {
-        return { type: 'section_start', section: 'verse' };
-      }
-      if (contentLower === 'start_of_chorus' || contentLower === 'soc') {
-        return { type: 'section_start', section: 'chorus' };
-      }
-      if (contentLower === 'end_of_verse' || contentLower === 'eov' ||
-          contentLower === 'end_of_chorus' || contentLower === 'eoc') {
-        return { type: 'section_end' };
-      }
-
-      const colonIndex = content.indexOf(':');
-      if (colonIndex !== -1) {
-        return {
-          type: 'metadata',
-          key: content.substring(0, colonIndex).trim().toLowerCase(),
-          value: content.substring(colonIndex + 1).trim()
-        };
-      }
-
-      return { type: 'metadata', key: content, value: '' };
-    }
-
-    const pairs = [];
-    let buffer = '';
-    let currentChord = '';
-    let inChord = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-
-      if (char === '|') {
-        if (buffer || currentChord) {
-          pairs.push({ chord: currentChord, lyrics: buffer });
-          currentChord = '';
-          buffer = '';
-        }
-        pairs.push({ isBarline: true });
-        continue;
-      }
-
-      if (char === '[') {
-        if (buffer && !currentChord) {
-          pairs.push({ chord: '', lyrics: buffer });
-          buffer = '';
-        }
-        else if (buffer && currentChord) {
-          pairs.push({ chord: currentChord, lyrics: buffer });
-          buffer = '';
-        }
-        currentChord = '';
-        inChord = true;
-      } else if (char === ']') {
-        inChord = false;
-      } else if (inChord) {
-        currentChord += char;
-      } else {
-        buffer += char;
-      }
-    }
-
-    if (buffer || currentChord) {
-      pairs.push({ chord: currentChord, lyrics: buffer });
-    }
-
-    return { type: 'line', pairs };
-  };
 
   const renderContent = () => {
     const lines = input.split('\n').map(parseLine);
@@ -241,7 +236,7 @@ const ChordSheet = () => {
           <div key={key++} className="font-bold text-lg mb-2">{line.value}</div>
         );
       }
-      else if (line.section && line.type === 'section_start') {
+      else if (line.type === 'section_start') {
         addCurrentSection();
         currentSection = line.section;
         currentSectionContent.push(
@@ -393,22 +388,22 @@ const ChordSheet = () => {
             </Button>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Printer className="w-4 h-4" />
-                Print Preview
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[90vw] w-[8.7in] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Print Preview</DialogTitle>
-              </DialogHeader>
-              <div className="bg-gray-100 p-4">
-                <PrintPreview content={content} />
-              </div>
-            </DialogContent>
-          </Dialog>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button className="flex items-center gap-2">
+								<Printer className="w-4 h-4" />
+								Print Preview
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="max-w-[90vw] w-[8.7in] max-h-[90vh] overflow-y-auto">
+							<DialogHeader>
+								<DialogTitle>Print Preview</DialogTitle>
+							</DialogHeader>
+							<div className="bg-white p-4">
+								<PrintPreview rawContent={input} parseLine={parseLine} />
+							</div>
+						</DialogContent>
+					</Dialog>
         </div>
       </div>
 
