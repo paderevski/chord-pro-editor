@@ -1,7 +1,7 @@
 "use client";
 
 import { ParsedLine, ChordLyricPairProps } from './types';
-import PrintPreview from './print-preview';
+import PrintButton from './print-preview';
 import React, { useState, useEffect } from 'react';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
@@ -181,7 +181,7 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
   const width = Math.max(chord?.length || 0, lyrics?.length || 0);
 
   return (
-    <div className="inline-block align-top" style={{ minWidth: `${width}ch` }}>
+    <div className="inline-block align-top" style={{ minWidth: `${width/4		}ch` }}>
       <div className="text-blue-600 font-bold h-6 overflow-visible whitespace-pre">
         {chord || '\u00A0'}
       </div>
@@ -388,23 +388,8 @@ const ChordSheet = () => {
             </Button>
           </div>
 
-					<Dialog>
-						<DialogTrigger asChild>
-							<Button className="flex items-center gap-2">
-								<Printer className="w-4 h-4" />
-								Print Preview
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="max-w-[90vw] w-[8.7in] max-h-[90vh] overflow-y-auto">
-							<DialogHeader>
-								<DialogTitle>Print Preview</DialogTitle>
-							</DialogHeader>
-							<div className="bg-white p-4">
-								<PrintPreview rawContent={input} parseLine={parseLine} />
-							</div>
-						</DialogContent>
-					</Dialog>
-        </div>
+					<PrintButton rawContent={input} parseLine={parseLine} />
+					</div>
       </div>
 
       <div className="flex-grow flex">

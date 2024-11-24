@@ -1,13 +1,35 @@
 import React from 'react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
-import { ParsedLine } from './types';
 
-interface PrintableChordLyricPairProps {
+// Include types directly in the file
+interface ChordLyricPairProps {
   chord?: string;
   lyrics?: string;
   isBarline?: boolean;
 }
+
+interface LineMetadata {
+  type: 'metadata';
+  key: string;
+  value: string;
+}
+
+interface SectionStart {
+  type: 'section_start';
+  section: string;
+}
+
+interface SectionEnd {
+  type: 'section_end';
+}
+
+interface LinePairs {
+  type: 'line';
+  pairs: ChordLyricPairProps[];
+}
+
+type ParsedLine = LineMetadata | SectionStart | SectionEnd | LinePairs;
 
 interface PrintPreviewProps {
   rawContent: string;
@@ -71,18 +93,14 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
 
           const width = Math.max(pair.chord?.length || 0, pair.lyrics?.length || 0);
           return `
-            <span class="inline-block" style="min-width: ${width}ch">
-              <span class="block h-4 text-blue-600 font-bold text-sm leading-none">
-                ${pair.chord || '\u00A0'}
-              </span>
-              <span class="block text-sm leading-none">
-                ${pair.lyrics || '\u00A0'}
-              </span>
+            <span class="inline-flex flex-col" style="min-width: ${width/4}ch">
+              <span class="text-blue-600 font-bold text-sm leading-none">${pair.chord || '\u00A0'}</span>
+              <span class="text-sm leading-none">${pair.lyrics || '\u00A0'}</span>
             </span>
           `;
         }).join('');
 
-        currentSectionContent.push(`<div class="mb-2">${pairsHtml}</div>`);
+        currentSectionContent.push(`<div class="mb-2 flex flex-wrap gap-0">${pairsHtml}</div>`);
       }
     });
 
@@ -111,11 +129,6 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
               max-width: 7in;
               margin: 0 auto;
               padding: 0.5in 0;
-            }
-            /* Prevent line wrapping within chord-lyric pairs */
-            .chord-line {
-              white-space: nowrap;
-              overflow-x: auto;
             }
           </style>
         </head>
