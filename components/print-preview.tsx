@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 
-// Include types directly in the file
 interface ChordLyricPairProps {
   chord?: string;
   lyrics?: string;
@@ -93,14 +92,18 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
 
           const width = Math.max(pair.chord?.length || 0, pair.lyrics?.length || 0);
           return `
-            <span class="inline-flex flex-col" style="min-width: ${width/4}ch">
-              <span class="text-blue-600 font-bold text-sm leading-none">${pair.chord || '\u00A0'}</span>
-              <span class="text-sm leading-none">${pair.lyrics || '\u00A0'}</span>
+            <span class="inline-block align-baseline" style="min-width: ${width}ch">
+              <span class="block text-blue-600 font-bold text-sm" style="margin-bottom: -0.5em; height: 1.5em">
+                ${pair.chord || ''}
+              </span>
+              <span class="block text-sm">
+                ${pair.lyrics || '\u00A0'}
+              </span>
             </span>
           `;
         }).join('');
 
-        currentSectionContent.push(`<div class="mb-2 flex flex-wrap gap-0">${pairsHtml}</div>`);
+        currentSectionContent.push(`<div class="mb-2">${pairsHtml}</div>`);
       }
     });
 

@@ -131,22 +131,31 @@ const parseLine = (line: string): ParsedLine => {
     const char = line[i];
 
     if (char === '|') {
-      if (buffer || currentChord) {
-        pairs.push({ chord: currentChord, lyrics: buffer });
+      if (buffer.trim() || currentChord) {
+        pairs.push({ chord: currentChord, lyrics: buffer.trim() });
         currentChord = '';
         buffer = '';
       }
       pairs.push({ isBarline: true });
+      // Skip any whitespace after the barline
+      while (i + 1 < line.length && line[i + 1].trim() === '') {
+        i++;
+      }
+      continue;
+    }
+
+    // Skip whitespace before barline
+    if (char.trim() === '' && i + 1 < line.length && line[i + 1] === '|') {
       continue;
     }
 
     if (char === '[') {
-      if (buffer && !currentChord) {
-        pairs.push({ chord: '', lyrics: buffer });
+      if (buffer.trim() && !currentChord) {
+        pairs.push({ chord: '', lyrics: buffer.trim() });
         buffer = '';
       }
-      else if (buffer && currentChord) {
-        pairs.push({ chord: currentChord, lyrics: buffer });
+      else if (buffer.trim() && currentChord) {
+        pairs.push({ chord: currentChord, lyrics: buffer.trim() });
         buffer = '';
       }
       currentChord = '';
@@ -160,8 +169,8 @@ const parseLine = (line: string): ParsedLine => {
     }
   }
 
-  if (buffer || currentChord) {
-    pairs.push({ chord: currentChord, lyrics: buffer });
+  if (buffer.trim() || currentChord) {
+    pairs.push({ chord: currentChord, lyrics: buffer.trim() });
   }
 
   return { type: 'line', pairs };
