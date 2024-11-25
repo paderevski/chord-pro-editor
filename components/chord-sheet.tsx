@@ -1,5 +1,10 @@
 "use client";
 
+interface ChordSheetProps {
+  initialContent?: string;
+  songKey?: string;
+}
+
 import { ParsedLine, ChordLyricPairProps } from './types';
 import PrintButton from './print-preview';
 import React, { useState, useEffect } from 'react';
@@ -202,8 +207,8 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
 };
 
 // Main component
-const ChordSheet = () => {
-  const [input, setInput] = useState(`{title: I Feel Lucky}
+const ChordSheet = ({ initialContent, songKey }: ChordSheetProps) => {
+  const [input, setInput] = useState(initialContent || `{title: I Feel Lucky}
 {key: C}
 {start_of_verse}
 [C]Somewhere | [Am]over the | rainbow |
@@ -212,13 +217,25 @@ const ChordSheet = () => {
 [Em]Why then, oh | [Am]why can't | [F]I?[C] |
 {end_of_verse}`);
   const [originalInput, setOriginalInput] = useState(input);
-  const [fromKey, setFromKey] = useState('C');
-  const [toKey, setToKey] = useState('C');
-	const [isTransposing, setIsTransposing] = useState(false);
+  const [fromKey, setFromKey] = useState(songKey || 'C');
+  const [toKey, setToKey] = useState(songKey || 'C');
+  const [isTransposing, setIsTransposing] = useState(false);
 
+  // Add effect to update content when selected song changes
   useEffect(() => {
-    setOriginalInput(input);
-  }, []);
+    if (initialContent !== undefined) {
+      setInput(initialContent);
+      setOriginalInput(initialContent);
+    }
+  }, [initialContent]);
+
+  // Add effect to update key when selected song changes
+  useEffect(() => {
+    if (songKey) {
+      setFromKey(songKey);
+      setToKey(songKey);
+    }
+  }, [songKey]);
 
   const renderContent = () => {
     const lines = input.split('\n').map(parseLine);

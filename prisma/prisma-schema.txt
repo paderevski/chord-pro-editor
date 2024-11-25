@@ -1,0 +1,31 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Song {
+  id        Int      @id @default(autoincrement())
+  title     String
+  artist    String?
+  key       String
+  content   String   // Store the ChordPro format content
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   // For user authentication
+  tags      Tag[]
+
+  @@index([userId])
+}
+
+model Tag {
+  id     Int    @id @default(autoincrement())
+  name   String
+  songs  Song[]
+
+  @@unique([name])
+}
