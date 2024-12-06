@@ -3,6 +3,8 @@
 interface ChordSheetProps {
   initialContent?: string;
   songKey?: string;
+  selectedSongId?: number;
+  onSave?: (content: string, key: string) => Promise<void>;
 }
 
 import { ParsedLine, ChordLyricPairProps } from './types';
@@ -195,7 +197,7 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
   const width = Math.max(chord?.length || 0, lyrics?.length || 0);
 
   return (
-    <div className="inline-block align-top" style={{ minWidth: `${width/4		}ch` }}>
+    <div className="inline-block align-top mx-1" style={{ minWidth: `${width/4		}ch` }}>
       <div className="text-blue-600 font-bold h-6 overflow-visible whitespace-pre">
         {chord || '\u00A0'}
       </div>
@@ -207,19 +209,13 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
 };
 
 // Main component
-const ChordSheet = ({ initialContent, songKey }: ChordSheetProps) => {
-  const [input, setInput] = useState(initialContent || `{title: I Feel Lucky}
-{key: C}
-{start_of_verse}
-[C]Somewhere | [Am]over the | rainbow |
-[F]Way up | [C]high |
-[F]Birds fly | [C]over the | rainbow |
-[Em]Why then, oh | [Am]why can't | [F]I?[C] |
-{end_of_verse}`);
+const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSheetProps) => {
+  const [input, setInput] = useState(initialContent || `{title: I Feel Lucky}...`);
   const [originalInput, setOriginalInput] = useState(input);
   const [fromKey, setFromKey] = useState(songKey || 'C');
   const [toKey, setToKey] = useState(songKey || 'C');
   const [isTransposing, setIsTransposing] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
 
   // Add effect to update content when selected song changes
   useEffect(() => {
@@ -237,6 +233,38 @@ const ChordSheet = ({ initialContent, songKey }: ChordSheetProps) => {
     }
   }, [songKey]);
 
+	// Add debounced auto-save
+  useEffect(() => {
+    if (!selectedSongId || !onSave || isTransposing) return;
+
+    setSaveStatus('unsaved');
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSaveStatus('saving');
+        await onSave(input, fromKey);
+        setSaveStatus('saved');
+      } catch (error) {
+        console.error('Failed to auto-save:', error);
+        setSaveStatus('unsaved');
+      }
+    }, 1000); // Auto-save after 1 second of no changes
+
+    return () => clearTimeout(timeoutId);
+  }, [input, fromKey, selectedSongId, onSave, isTransposing]);
+
+  // Add save button handler
+  const handleManualSave = async () => {
+    if (!selectedSongId || !onSave) return;
+
+    try {
+      setSaveStatus('saving');
+      await onSave(input, fromKey);
+      setSaveStatus('saved');
+    } catch (error) {
+      console.error('Failed to save:', error);
+      setSaveStatus('unsaved');
+    }
+  };
   const renderContent = () => {
     const lines = input.split('\n').map(parseLine);
     const content: React.JSX.Element[] = [];
@@ -364,75 +392,96 @@ const ChordSheet = ({ initialContent, songKey }: ChordSheetProps) => {
   const content = renderContent();
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="h-16 border-b bg-gray-50 flex items-center px-4">
-        <h1 className="text-xl font-bold">ChordPro Editor</h1>
-        <div className="flex-grow flex items-center justify-end space-x-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">From:</span>
-              <Select value={fromKey} onValueChange={setFromKey}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {KEYS.map(key => (
-                    <SelectItem key={key} value={key}>{key}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+		<div className="h-screen flex flex-col">
+			<div className="h-16 border-b bg-gray-50 flex items-center px-4">
+				<h1 className="text-xl font-bold">ChordPro Editor</h1>
+				<div className="flex-grow flex items-center justify-end space-x-4">
+					{selectedSongId && (
+						<div className="flex items-center gap-2">
+							<span className={`text-sm ${
+								saveStatus === 'saved' ? 'text-green-600' :
+								saveStatus === 'saving' ? 'text-blue-600' :
+								'text-orange-600'
+							}`}>
+								{saveStatus === 'saved' && '✓ All changes saved'}
+								{saveStatus === 'saving' && '💾 Saving...'}
+								{saveStatus === 'unsaved' && '● Unsaved changes'}
+							</span>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleManualSave}
+								disabled={saveStatus === 'saving' || !selectedSongId}
+							>
+								Save
+							</Button>
+						</div>
+					)}
+					<div className="flex items-center space-x-4">
+						<div className="flex items-center space-x-2">
+							<span className="text-sm font-medium">From:</span>
+							<Select value={fromKey} onValueChange={setFromKey}>
+								<SelectTrigger className="w-24">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{KEYS.map(key => (
+										<SelectItem key={key} value={key}>{key}</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">To:</span>
-              <Select value={toKey} onValueChange={setToKey}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {KEYS.map(key => (
-                    <SelectItem key={key} value={key}>{key}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+						<div className="flex items-center space-x-2">
+							<span className="text-sm font-medium">To:</span>
+							<Select value={toKey} onValueChange={setToKey}>
+								<SelectTrigger className="w-24">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{KEYS.map(key => (
+										<SelectItem key={key} value={key}>{key}</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 
-            <Button
-              variant="secondary"
-              onClick={handleTranspose}
-              disabled={fromKey === toKey}
-            >
-              Transpose
-            </Button>
+						<Button
+							variant="secondary"
+							onClick={handleTranspose}
+							disabled={fromKey === toKey}
+						>
+							Transpose
+						</Button>
 
-            <Button
-              variant="outline"
-              onClick={handleRevert}
-              disabled={input === originalInput}
-            >
-              Revert
-            </Button>
-          </div>
+						<Button
+							variant="outline"
+							onClick={handleRevert}
+							disabled={input === originalInput}
+						>
+							Revert
+						</Button>
+					</div>
 
 					<PrintButton rawContent={input} parseLine={parseLine} />
-					</div>
-      </div>
+				</div>
+			</div>
 
-      <div className="flex-grow flex">
-        <div className="w-1/2 border-r p-4 flex flex-col">
+			<div className="flex-grow flex">
+				<div className="w-1/2 border-r p-4 flex flex-col">
 					<Textarea
 						value={input}
 						onChange={handleInputChange}
 						className="flex-grow font-mono resize-none"
 						placeholder="Enter ChordPro format text..."
 					/>
-					</div>
-        <div className="w-1/2 p-4 bg-white overflow-auto">
-          <div className="max-w-3xl mx-auto">{content}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
+				</div>
+				<div className="w-1/2 p-4 bg-white overflow-auto">
+					<div className="max-w-3xl mx-auto">{content}</div>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 export default ChordSheet;
