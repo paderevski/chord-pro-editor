@@ -29,10 +29,11 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+	console.log("PUT request:");
   const { id } = await params;
   try {
     const { title, artist, key, content, tags } = await req.json();
-
+		console.log(title, artist, key, content, tags);
     const song = await prisma.song.update({
       where: { id: parseInt(id) },
       data: {
@@ -50,7 +51,7 @@ export async function PUT(
       },
       include: { tags: true },
     });
-
+		console.log("\nResult:", song);
     return NextResponse.json(song);
   } catch (error) {
     console.error('Failed to update song:', error);

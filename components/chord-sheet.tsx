@@ -237,7 +237,8 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
   useEffect(() => {
     if (!selectedSongId || !onSave || isTransposing) return;
 
-    setSaveStatus('unsaved');
+    // setSaveStatus('unsaved');
+		// console.log("unsaved1");
     const timeoutId = setTimeout(async () => {
       try {
         setSaveStatus('saving');
@@ -247,7 +248,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
         console.error('Failed to auto-save:', error);
         setSaveStatus('unsaved');
       }
-    }, 1000); // Auto-save after 1 second of no changes
+    }, 10000); // Auto-save after 10 seconds of no changes
 
     return () => clearTimeout(timeoutId);
   }, [input, fromKey, selectedSongId, onSave, isTransposing]);
