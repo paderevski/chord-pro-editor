@@ -61,6 +61,30 @@ export default function Home() {
     }
   };
 
+	const handleNewSong = async (songData: { title: string; artist: string; key: string }) => {
+    try {
+      const response = await fetch('/api/songs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...songData,
+          content: `{title: ${songData.title}}\n{key: ${songData.key}}\n{start_of_verse}\n\n{end_of_verse}`,
+          tags: []
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create song');
+
+      // Refresh the song list and select the new song
+      await fetchSongs();
+      const newSong = await response.json();
+      setSelectedSong(newSong);
+    } catch (error) {
+      console.error('Error creating song:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="h-screen flex">
       <div className="w-80 border-r bg-gray-50 flex flex-col h-full">
@@ -68,6 +92,7 @@ export default function Home() {
           songs={songs}
           selectedSong={selectedSong}
           onSongSelect={setSelectedSong}
+					onNewSong={handleNewSong}
         />
       </div>
 

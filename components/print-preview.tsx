@@ -103,7 +103,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           `;
         }).join('');
 
-        currentSectionContent.push(`<div class="mb-2">${pairsHtml}</div>`);
+        currentSectionContent.push(`<div>${pairsHtml}</div>`);
       }
     });
 

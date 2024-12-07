@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Search, Tag } from 'lucide-react';
 import { Song, Tag as PrismaTag } from '@prisma/client';
 import { useState, useEffect } from 'react';
+import { NewSongForm } from './new-song-form';
+
 import {
   Dialog,
   DialogContent,
@@ -20,10 +22,17 @@ interface SongListProps {
   songs: SongWithTags[];
   selectedSong: SongWithTags | null;
   onSongSelect: (song: SongWithTags) => void;
+	onNewSong: (songData: { title: string; artist: string; key: string }) => Promise<void>;
 }
 
-export default function SongList({ songs, selectedSong, onSongSelect }: SongListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+export default function SongList({ songs, selectedSong, onSongSelect, onNewSong }: SongListProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleNewSong = async (songData: { title: string; artist: string; key: string }) => {
+    await onNewSong(songData);
+    setDialogOpen(false);
+  };
+	const [searchTerm, setSearchTerm] = useState('');
   const [filteredSongs, setFilteredSongs] = useState<SongWithTags[]>(songs);
 
   // Update filtered songs when songs or search term changes
@@ -32,7 +41,8 @@ export default function SongList({ songs, selectedSong, onSongSelect }: SongList
       song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       song.artist?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       song.tags.some(tag => tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    )
+		.sort((a, b) => a.title.localeCompare(b.title));
     setFilteredSongs(filtered);
   }, [searchTerm, songs]);
 
@@ -50,20 +60,23 @@ export default function SongList({ songs, selectedSong, onSongSelect }: SongList
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
-                New
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Song</DialogTitle>
-              </DialogHeader>
-              {/* Add new song form here */}
-            </DialogContent>
-          </Dialog>
+					<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+						<DialogTrigger asChild>
+							<Button size="sm" className="flex items-center gap-2">
+								<PlusCircle className="h-4 w-4" />
+								New
+							</Button>
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Create New Song</DialogTitle>
+							</DialogHeader>
+							<NewSongForm
+								onSubmit={handleNewSong}
+								onCancel={() => setDialogOpen(false)}
+							/>
+						</DialogContent>
+					</Dialog>
         </div>
       </div>
 
