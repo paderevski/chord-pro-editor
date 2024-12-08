@@ -50,7 +50,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
     const addCurrentSection = () => {
       if (currentSection && currentSectionContent.length > 0) {
         content.push(
-          `<div class="${currentSection === 'chorus' ? 'border-l-2 border-blue-600 pl-4' : ''} mb-4">
+          `<div class="${currentSection === 'chorus' ? 'border-l border-blue-600 pl-2' : ''} break-inside-avoid-page mb-4">
             ${currentSectionContent.join('')}
           </div>`
         );
@@ -83,20 +83,19 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
         const pairsHtml = line.pairs.map(pair => {
           if (pair.isBarline) {
             return `
-              <span class="inline-block mx-1 w-[1px] bg-gray-300">
+              <span class="inline-block w-[1px] bg-gray-600">
                 <span class="h-4">&#x200B;</span>
                 <span class="h-4">&#x200B;</span>
               </span>
             `;
           }
 
-          const width = Math.max(pair.chord?.length || 0, pair.lyrics?.length || 0);
           return `
-            <span class="inline-block align-baseline" style="min-width: ${width}ch">
-              <span class="block text-blue-600 font-bold text-sm" style="margin-bottom: -0.5em; height: 1.5em">
+            <span class="inline-block align-baseline">
+              <span class="block text-blue-600 font-bold text-xs" style="margin-bottom: -0.5em; height: 1.5em">
                 ${pair.chord || ''}
               </span>
-              <span class="block text-sm">
+              <span class="block text-xs">
                 ${pair.lyrics || '\u00A0'}
               </span>
             </span>
@@ -117,7 +116,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @page {
-              margin: 0.5in;
+              margin: 0.25in;
               size: portrait;
             }
             @media print {
@@ -125,13 +124,17 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
               }
+							/* Add these rules for sections */
+							.break-inside-avoid-page {
+								page-break-inside: avoid;
+							}
             }
             body {
-              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-              line-height: 1.2;
-              max-width: 7in;
-              margin: 0 auto;
-              padding: 0.5in 0;
+              font-family: Arial, Helvetica, sans-serif;
+              line-height: 1.0;
+              max-width: 8.5in;
+              margin: 0.5in;
+              padding: 0.15in 0.5in;
             }
           </style>
         </head>
@@ -139,7 +142,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           <div>
             ${title ? `<h1 class="text-2xl font-bold text-center mb-2">${title}</h1>` : ''}
             ${songKey ? `<div class="text-center mb-4 text-gray-600">Key: ${songKey}</div>` : ''}
-            <div class="space-y-4">
+            <div class="space-y-4 columns-2" >
               ${content.join('')}
             </div>
           </div>
