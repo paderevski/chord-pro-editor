@@ -112,8 +112,24 @@ const parseLine = (line: string): ParsedLine => {
     if (contentLower === 'start_of_chorus' || contentLower === 'soc') {
       return { type: 'section_start', section: 'chorus' };
     }
+    if (contentLower === 'start_of_bridge' || contentLower === 'sob') {
+      return { type: 'section_start', section: 'bridge' };
+		}
+    if (contentLower === 'start_of_intro' || contentLower === 'soi') {
+      return { type: 'section_start', section: 'intro' };
+    }
+    if (contentLower === 'start_of_outro' || contentLower === 'soo') {
+      return { type: 'section_start', section: 'outro' };
+    }
+		if (contentLower === 'Solo:') {
+      return { type: 'section_start', section: '' };
+    }
     if (contentLower === 'end_of_verse' || contentLower === 'eov' ||
-        contentLower === 'end_of_chorus' || contentLower === 'eoc') {
+        contentLower === 'end_of_chorus' || contentLower === 'eoc'  ||
+        contentLower === 'end_of_bridge' || contentLower === 'eob' ||
+        contentLower === 'end_of_intro' || contentLower === 'eoi' ||
+        contentLower === 'end_of_outro' || contentLower === 'eoo' ||
+        contentLower === 'end') {
       return { type: 'section_end' };
     }
 
@@ -195,7 +211,9 @@ const ChordLyricPair: React.FC<{ chord?: string; lyrics?: string; isBarline?: bo
   }
 
   const width = Math.max(chord?.length || 0, lyrics?.length || 0);
-
+	if (lyrics) {
+		lyrics = lyrics.replaceAll('~', '\u2003')
+	}
   return (
     <div className="inline-block align-top mx-1" style={{ minWidth: `${width/4		}ch` }}>
       <div className="text-blue-600 font-bold h-6 overflow-visible whitespace-pre">
@@ -233,7 +251,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
     }
   }, [songKey]);
 
-	// Add debounced auto-save
+	// Add debounced auto-save (should fix or remove)
   useEffect(() => {
     if (!selectedSongId || !onSave || isTransposing) return;
 
@@ -248,7 +266,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
         console.error('Failed to auto-save:', error);
         setSaveStatus('unsaved');
       }
-    }, 10000); // Auto-save after 10 seconds of no changes
+    }, 1000000); // Auto-save after 1000 seconds of no changes
 
     return () => clearTimeout(timeoutId);
   }, [input, fromKey, selectedSongId, onSave, isTransposing]);

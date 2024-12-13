@@ -46,6 +46,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
     let currentSectionContent: React.ReactNode[] = [];
     let title = '';
     let songKey = '';
+		let artist = '';
 
     const addCurrentSection = () => {
       if (currentSection && currentSectionContent.length > 0) {
@@ -64,7 +65,9 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           title = line.value;
         } else if (line.key === 'key') {
           songKey = line.value;
-        }
+				} else if (line.key === 'artist') {
+					artist = line.value;
+				}
       }
       else if (line.type === 'section_start') {
         addCurrentSection();
@@ -89,7 +92,9 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
               </span>
             `;
           }
-
+					if (pair.lyrics) {
+						pair.lyrics = pair.lyrics.replaceAll('~', '\u2003')
+					}
           return `
             <span class="inline-block align-baseline">
               <span class="block text-blue-600 font-bold text-xs" style="margin-bottom: -0.5em; height: 1.5em">
@@ -141,6 +146,8 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
         <body>
           <div>
             ${title ? `<h1 class="text-2xl font-bold text-center mb-2">${title}</h1>` : ''}
+						${artist ? `<h2 class="text-1xl font-bold text-center mb-2">${artist}</h2>` : ''}
+
             ${songKey ? `<div class="text-center mb-4 text-gray-600">Key: ${songKey}</div>` : ''}
             <div class="space-y-4 columns-2" >
               ${content.join('')}
