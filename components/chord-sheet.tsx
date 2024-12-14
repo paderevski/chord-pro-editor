@@ -121,8 +121,8 @@ const parseLine = (line: string): ParsedLine => {
     if (contentLower === 'start_of_outro' || contentLower === 'soo') {
       return { type: 'section_start', section: 'outro' };
     }
-		if (contentLower === 'Solo:') {
-      return { type: 'section_start', section: '' };
+		if (contentLower === 'solo' || contentLower === 's') {
+      return { type: 'section_start', section: 'solo' };
     }
     if (contentLower === 'end_of_verse' || contentLower === 'eov' ||
         contentLower === 'end_of_chorus' || contentLower === 'eoc'  ||
@@ -293,30 +293,44 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 
     const addCurrentSection = () => {
       if (currentSection && currentSectionContent.length > 0) {
-        content.push(
-          <div key={key++} className={currentSection === 'chorus' ? 'pl-4 border-l-2 border-blue-600' : ''}>
-            {currentSectionContent}
-          </div>
-        );
+				if (currentSection==='chorus') {
+					content.push(
+						<div key={key++}>
+							<div key={key++} className='text-sm font-bold mb-2 text-gray-600'>Chorus:</div>
+							<div key={key++} className='pl-4 border-l-2 border-blue-600'>
+								{currentSectionContent}
+							</div>
+					</div>
+					)
+				} else {
+					content.push(
+						<div key={key++} className=''>
+							{currentSectionContent}
+						</div>
+					);
+				};
         currentSectionContent = [];
       }
     };
 
     lines.forEach((line) => {
-      if (line.type === 'metadata') {
-        addCurrentSection();
-        content.push(
-          <div key={key++} className="font-bold text-lg mb-2">{line.value}</div>
-        );
-      }
+				if (line.type === 'metadata') {
+					addCurrentSection();
+					content.push(
+						<div key={key++} className="text-sm font-bold mb-2">{line.value}</div>
+					);
+				}
       else if (line.type === 'section_start') {
         addCurrentSection();
         currentSection = line.section;
-        currentSectionContent.push(
-          <div key={key++} className={`text-sm font-bold mb-2 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}`}>
-            {line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
-          </div>
-        );
+				if (line.section !== 'chorus') {
+					currentSectionContent.push(
+						<div key={key++} className={`text-sm font-bold mb-2 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}`}>
+							{line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
+						</div>
+					);
+				}
+
       }
       else if (line.type === 'section_end') {
         addCurrentSection();

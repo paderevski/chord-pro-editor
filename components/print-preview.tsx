@@ -147,7 +147,6 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           <div>
             ${title ? `<h1 class="text-2xl font-bold text-center mb-2">${title}</h1>` : ''}
 						${artist ? `<h2 class="text-1xl font-bold text-center mb-2">${artist}</h2>` : ''}
-
             ${songKey ? `<div class="text-center mb-4 text-gray-600">Key: ${songKey}</div>` : ''}
             <div class="space-y-4 columns-2" >
               ${content.join('')}
