@@ -47,14 +47,26 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
     let title = '';
     let songKey = '';
 		let artist = '';
+		let key = 0;
 
     const addCurrentSection = () => {
       if (currentSection && currentSectionContent.length > 0) {
-        content.push(
-          `<div class="${currentSection === 'chorus' ? 'border-l border-blue-600 pl-2' : ''} break-inside-avoid-page mb-4">
-            ${currentSectionContent.join('')}
-          </div>`
-        );
+				if (currentSection==='chorus') {
+					content.push(`
+						<div key=${key++} class='break-inside-avoid-column'>
+							<div key=aa${key++} class='text-sm font-bold mb-2 text-gray-600'>Chorus:</div>
+							<div key=bb${key++} class='pl-4 border-l-2 border-blue-600'>
+								${currentSectionContent.join('')}
+							</div>
+					</div>`
+					)
+				} else {
+					content.push(
+						`<div key=${key++} class='break-inside-avoid-column'>
+							${currentSectionContent.join('')}
+						</div>`
+					);
+				};
         currentSectionContent = [];
       }
     };
@@ -72,11 +84,13 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
       else if (line.type === 'section_start') {
         addCurrentSection();
         currentSection = line.section;
-        currentSectionContent.push(
-          `<div class="text-sm font-bold mb-1 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}">
-            ${line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
-          </div>`
-        );
+				if (line.section !== 'chorus') {
+					currentSectionContent.push(
+						`<div class="text-sm font-bold mb-1 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}">
+							${line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
+						</div>`
+					);
+				}
       }
       else if (line.type === 'section_end') {
         addCurrentSection();
@@ -130,8 +144,8 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
                 -webkit-print-color-adjust: exact;
               }
 							/* Add these rules for sections */
-							.break-inside-avoid-page {
-								page-break-inside: avoid;
+							.break-inside-avoid-column {
+								column-break-inside: avoid;
 							}
             }
             body {
