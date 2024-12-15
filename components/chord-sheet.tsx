@@ -500,7 +500,8 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 				</div>
 			</div>
 
-			<div className="flex-grow flex">
+			<div className="flex-grow flex overflow-y-auto">
+				{/* Left panel with TextArea */}
 				<div className="w-1/2 border-r p-4 flex flex-col">
 					<Textarea
 						value={input}
@@ -509,8 +510,14 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 						placeholder="Enter ChordPro format text..."
 					/>
 				</div>
-				<div className="w-1/2 p-4 bg-white overflow-auto">
-					<div className="max-w-3xl mx-auto">{content}</div>
+
+				{/* Right panel with rendered content */}
+				<div className="w-1/2 p-4 overflow-y-auto">
+					<div className="h-full">
+						<div className="max-w-3xl mx-auto">
+							{content}
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
