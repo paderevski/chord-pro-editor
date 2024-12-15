@@ -54,8 +54,8 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
 				if (currentSection==='chorus') {
 					content.push(`
 						<div key=${key++} class='break-inside-avoid-column'>
-							<div key=aa${key++} class='text-sm font-bold mb-2 text-gray-600'>Chorus:</div>
-							<div key=bb${key++} class='pl-4 border-l-2 border-blue-600'>
+							<div key=aa${key++} class='text-sm font-bold mb-2 text-gray-600'>Chorus</div>
+							<div key=bb${key++} class='pl-2 border-l border-gray-600'>
 								${currentSectionContent.join('')}
 							</div>
 					</div>`
@@ -87,7 +87,7 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
 				if (line.section !== 'chorus') {
 					currentSectionContent.push(
 						`<div class="text-sm font-bold mb-1 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}">
-							${line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
+							${line.section.charAt(0).toUpperCase() + line.section.slice(1)}
 						</div>`
 					);
 				}

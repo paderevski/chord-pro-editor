@@ -124,6 +124,9 @@ const parseLine = (line: string): ParsedLine => {
 		if (contentLower === 'solo' || contentLower === 's') {
       return { type: 'section_start', section: 'solo' };
     }
+		if (contentLower === 'bridge' || contentLower === 'b') {
+      return { type: 'section_start', section: 'bridge' };
+    }
     if (contentLower === 'end_of_verse' || contentLower === 'eov' ||
         contentLower === 'end_of_chorus' || contentLower === 'eoc'  ||
         contentLower === 'end_of_bridge' || contentLower === 'eob' ||
@@ -260,16 +263,16 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
     const timeoutId = setTimeout(async () => {
       try {
         setSaveStatus('saving');
-        await onSave(input, fromKey);
+        await onSave(input, toKey);
         setSaveStatus('saved');
       } catch (error) {
         console.error('Failed to auto-save:', error);
         setSaveStatus('unsaved');
       }
-    }, 1000000); // Auto-save after 1000 seconds of no changes
+    }, 60000); // Auto-save after 1000 seconds of no changes
 
     return () => clearTimeout(timeoutId);
-  }, [input, fromKey, selectedSongId, onSave, isTransposing]);
+  }, [input, toKey, selectedSongId, onSave, isTransposing]);
 
   // Add save button handler
   const handleManualSave = async () => {
@@ -277,7 +280,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 
     try {
       setSaveStatus('saving');
-      await onSave(input, fromKey);
+      await onSave(input, toKey);
       setSaveStatus('saved');
     } catch (error) {
       console.error('Failed to save:', error);
@@ -297,14 +300,14 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 					content.push(
 						<div key={key++}>
 							<div key={key++} className='text-sm font-bold mb-2 text-gray-600'>Chorus:</div>
-							<div key={key++} className='pl-4 border-l-2 border-blue-600'>
+							<div key={key++} className='pl-2 mb-4 border-l border-blue-600'>
 								{currentSectionContent}
 							</div>
 					</div>
 					)
 				} else {
 					content.push(
-						<div key={key++} className=''>
+						<div key={key++} className='mb-8'>
 							{currentSectionContent}
 						</div>
 					);
@@ -326,7 +329,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 				if (line.section !== 'chorus') {
 					currentSectionContent.push(
 						<div key={key++} className={`text-sm font-bold mb-2 ${line.section === 'chorus' ? 'text-blue-600' : 'text-gray-600'}`}>
-							{line.section.charAt(0).toUpperCase() + line.section.slice(1)}:
+							{line.section.charAt(0).toUpperCase() + line.section.slice(1)}
 						</div>
 					);
 				}
@@ -338,7 +341,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
       }
       else if (line.pairs && line.type === 'line') {
         currentSectionContent.push(
-          <div key={key++} className="mb-4">
+          <div key={key++} className="mb">
             {line.pairs.map((pair, pairIndex) => (
               <ChordLyricPair key={pairIndex} {...pair} />
             ))}
@@ -414,6 +417,8 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 		if (!isTransposing) {
 			setOriginalInput(newValue);
 		}
+
+		setSaveStatus('unsaved');
 	};
 
   const handleRevert = () => {
