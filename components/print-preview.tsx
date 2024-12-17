@@ -79,6 +79,11 @@ export const PrintButton: React.FC<PrintPreviewProps> = ({ rawContent, parseLine
           songKey = line.value;
 				} else if (line.key === 'artist') {
 					artist = line.value;
+				} else {
+					addCurrentSection();
+					content.push(
+						`<div key=cc${key++} class="text-sm font-bold mb-1 text-gray-600">${line.value}</div>`
+					);
 				}
       }
       else if (line.type === 'section_start') {
