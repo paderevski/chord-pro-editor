@@ -320,7 +320,7 @@ const ChordSheet = ({ initialContent, songKey, selectedSongId, onSave }: ChordSh
 				if (line.type === 'metadata') {
 					addCurrentSection();
 					content.push(
-						<div key={key++} className="text-sm font-bold mb-2">{line.value}</div>
+						<div key={key++} className="border border-gray-600 text-sm font-bold mb-2">{line.value}</div>
 					);
 				}
       else if (line.type === 'section_start') {
